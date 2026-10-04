@@ -1,7 +1,16 @@
 count = 0
-with open("LoginAna/auth.log", "r") as auth_log:
+with open("auth.log", "r") as auth_log:
     for entry in auth_log:
         if "Failed password" in entry:
-            count += 1
+            if "repeated" in entry:
+                entry_split = entry.split()
+                repeat_num = int(entry_split[7]) #This 7 only works right now for this log file, need to implement something different
+                count += repeat_num
+            else:
+                count += 1
+               
+
+
+
 
 print(f"Total: {count}")
