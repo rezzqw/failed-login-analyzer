@@ -5,7 +5,7 @@ ACCEPTED = re.compile(r"^\w{3}\s+\d{1,2} \d{2}:\d{2}:\d{2} \S+ sshd\[\d+\]: Acce
 FAILED = re.compile(r"^\w{3}\s+\d{1,2} \d{2}:\d{2}:\d{2} \S+ sshd\[\d+\]: Failed password for .+ from " + IP + r" port \d+ ssh2$")
 ip_addresses_failures = {}
 ip_addresses_successes = {}
-with open("auth.log", "r") as auth_log:
+with open("samples/auth.log", "r") as auth_log:
     for entry in auth_log:
         repeat_match = REPEATED.match(entry)
         if repeat_match is not None:
