@@ -1,6 +1,14 @@
 import re
 import argparse
 import csv
+import os
+from enrichment import ip_lookup
+
+key = os.environ.get("ABUSEIPDB_API_KEY")
+
+if key is None:
+    print("ABUSEIPDB_API_KEY is not set, skipping enrichment")
+
 
 parser = argparse.ArgumentParser(description="Parses Linux SSH auth logs to count failed and successful logins per IP and flag likely brute-force sources")
 parser.add_argument("file", help="path to the Linux SSH auth log file")
@@ -44,7 +52,7 @@ try:
 except FileNotFoundError:
     parser.error(f"file not found: {args.file}")
 except PermissionError:
-    parser.eroor("Error: Permission denied to open file. Try to run with sudo")
+    parser.error("Error: Permission denied to open file. Try to run with sudo")
 #Rank the list from worst offenders
 ranked_ip_fails = sorted(ip_addresses_failures.items(), key=lambda pair: pair[1], reverse=True)
 threshold_list = []
@@ -57,10 +65,14 @@ for ip, failed_attempts in ranked_ip_fails:
         label = "BRUTE FORCE"
     else:
         label = "not flagged"
-    threshold_list.append((ip, failed_attempts, success_count, label))
+    if label != "not flagged" and key is not None:
+        score, country, isp = ip_lookup(ip, key)
+    else:
+        score, country, isp = "   "
+    threshold_list.append((ip, failed_attempts, success_count, label, score, country, isp))
 
 
-for ip, failed_attempts, success_count, label in threshold_list:
+for ip, failed_attempts, success_count, label, score, country, isp in threshold_list:
     if label == "POSSIBLE COMPROMISE" or label == "BRUTE FORCE":
       print(f"IP: {ip}, Failed: {failed_attempts}, Success:{success_count}, Label:{label} ")  
 
@@ -69,7 +81,7 @@ print(f"Total: {sum(ip_addresses_failures.values())} failures, {sum(ip_addresses
 #Build CSV report of all results
 with open("report.csv", "w", newline="") as report:
     writer = csv.writer(report)
-    writer.writerow(["IP", "Failures", "Successes", "label"])
+    writer.writerow(["IP", "Failures", "Successes", "Label", "Abuse Confidence Score", "Country Code", "ISP"])
     for row in threshold_list:
         writer.writerow(row)
 
