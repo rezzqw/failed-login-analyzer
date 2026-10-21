@@ -6,14 +6,18 @@ analyzer.py ran with auth.log and a threshold of 10:
 
 
 how to run:
+pip install -r requirements.txt
 version: python 3.14
 command: ./python3 analyzer.py <auth log file path>
 
 how it works:
 Failed password lines count as 1
+Successful login lines count as 1
 message repeated N times lines count as N
 PAM authentication failure lines are skipped as duplicates
 Successful logins are tracked separately, by password or key
+Enriches ip's with AbuseIPDB attacker confidence score, country code, and ISP
+Imports results to report.csv
 
 limitations:
 Only standard syslog timestamps, not ISO 8601 formats from newer Ubuntu
